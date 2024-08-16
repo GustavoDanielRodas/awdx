@@ -24,7 +24,7 @@
         .highlight {
             font-size: 48px;
             font-weight: bold;
-            color: #4CAF50;
+            color: #ffffff;
         }
         #intermittent-text {
             font-size: 60px;
@@ -36,7 +36,7 @@
         #date-time {
             margin-top: auto;
             font-size: 40px;
-            color:aqua;
+            color:rgb(218, 165, 9);
         }
         #countdown {
             font-size: 36px;
@@ -47,14 +47,14 @@
 <body>
     <div id="particles-js"></div>
 
+    <div class="highlight" id="welcome-text">Vacío</div>
+    <div id="intermittent-text">Vacío también</div>
+
         <!-- Fecha y hora actual -->
         <div id="date-time"></div>
 
     
-    <div class="highlight" id="welcome-text">Se viene Boca Campeón</div>
-    <div id="intermittent-text">Boca Camopeón</div>
-   
-    
+
     <!-- Tiempo restante hasta las 22:00 horas -->
     <div id="countdown"></div>
 
@@ -168,18 +168,16 @@
         function updateCountdown() {
             const now = new Date();
             const targetTime = new Date();
-            targetTime.setHours(22, 0, 0, 0);
+            targetTime.setHours(0, 0, 0, 0);
             
             if (now > targetTime) {
                 targetTime.setDate(targetTime.getDate() + 1);
             }
             
             const timeDiff = targetTime - now;
-            const hours = Math.floor(timeDiff / (0000 * 60 * 60));
-            const minutes = Math.floor((timeDiff % (0000 * 60 * 60)) / (1000 * 60));
+            const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+            const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
             
-            document.getElementById('countdown').innerText = `Faltan: ${hours} horas 
-            ${minutes} minutos.`;
         }
 
         function updateDateTime() {
@@ -206,9 +204,7 @@
             stopColorChange();
 
             const text = `
-                Se viene
-                Boca Campeón. 
-                Fecha y Hora Actual: ${document.getElementById('date-time').innerText}
+                ${document.getElementById('date-time').innerText}
             `;
             
             currentUtterance = new SpeechSynthesisUtterance(text);
