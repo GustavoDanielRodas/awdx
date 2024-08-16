@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenida</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            overflow: hidden;
+            background-color: #000; /* Fondo negro */
+        }
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            top: 0;
+            left: 0;
+        }
+        .highlight {
+            font-size: 48px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        #intermittent-text {
+            font-size: 60px;
+            font-weight: bold;
+            color: #FF5722;
+            margin-top: 10px;
+            transition: color 0.5s ease;
+        }
+        #date-time {
+            margin-top: auto;
+            font-size: 40px;
+            color:aqua;
+        }
+        #countdown {
+            font-size: 36px;
+            color:aqua;
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+
+        <!-- Fecha y hora actual -->
+        <div id="date-time"></div>
+
+    
+    <div class="highlight" id="welcome-text">Bienvenido Amiguito</div>
+    <div id="intermittent-text">Nos vemos a la Noche</div>
+   
+    
+    <!-- Tiempo restante hasta las 22:00 horas -->
+    <div id="countdown"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script>
+        // Configuración de partículas
+        particlesJS('particles-js', {
+            "particles": {
+                "number": {
+                    "value": 1000,
+                    "density": {
+                        "enable": true,
+                        "value_area": 1500
+                    }
+                },
+                "color": {
+                    "value": "#ffffff"
+                },
+                "shape": {
+                    "type": "image",
+                    "image": {
+                        "src": "Boca01.png",
+                        "width": 24,  // Tamaño original de la imagen de las partículas
+                        "height": 24
+                    }
+                },
+                "opacity": {
+                    "value": 25,
+                    "random": false,
+                    "anim": {
+                        "enable": false,
+                        "speed": 1,
+                        "opacity_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "size": {
+                    "value": 50,  // Tamaño original de las partículas
+                    "random": true,
+                    "anim": {
+                        "enable": false,
+                        "speed": 40,
+                        "size_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "line_linked": {
+                    "enable": true,
+                    "distance": 150,
+                    "color": "#ffffff",
+                    "opacity": 0.4,
+                    "width": 1
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 6,
+                    "direction": "none",
+                    "random": false,
+                    "straight": false,
+                    "out_mode": "out",
+                    "bounce": false,
+                    "attract": {
+                        "enable": false,
+                        "rotateX": 600,
+                        "rotateY": 1200
+                    }
+                }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": {
+                        "enable": true,
+                        "mode": "repulse"
+                    },
+                    "onclick": {
+                        "enable": true,
+                        "mode": "push"
+                    },
+                    "resize": true
+                },
+                "modes": {
+                    "repulse": {
+                        "distance": 100,
+                        "duration": 0.4
+                    },
+                    "push": {
+                        "particles_nb": 4
+                    }
+                }
+            },
+            "retina_detect": true
+        });
+
+        let currentUtterance = null;
+        let colorInterval = null;
+
+        function startColorChange() {
+            let colors = ['#FF5722', '#FFC107', '#4CAF50', '#2196F3'];
+            let index = 0;
+            colorInterval = setInterval(() => {
+                document.getElementById('intermittent-text').style.color = colors[index];
+                index = (index + 1) % colors.length;
+            }, 500); // Cambia de color cada 500 ms
+        }
+
+        function stopColorChange() {
+            clearInterval(colorInterval);
+        }
+
+        function updateCountdown() {
+            const now = new Date();
+            const targetTime = new Date();
+            targetTime.setHours(22, 0, 0, 0);
+            
+            if (now > targetTime) {
+                targetTime.setDate(targetTime.getDate() + 1);
+            }
+            
+            const timeDiff = targetTime - now;
+            const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+            const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            document.getElementById('countdown').innerText = `Faltan ${hours} horas 
+            ${minutes} minutos.`;
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            const options = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            };
+            const dateTimeString = now.toLocaleString('es-ES', options);
+            document.getElementById('date-time').innerText = `${dateTimeString}`;
+        }
+
+        function translateAndSpeak(language) {
+            // Detener la lectura actual si hay una
+            if (currentUtterance) {
+                window.speechSynthesis.cancel();
+            }
+
+            // Detener el cambio de color
+            stopColorChange();
+
+            const text = `
+                Bienvenido Amiguito. 
+                Nos vemos a la Noche. 
+                Faltan horas y minutos para las 22:00. 
+                Fecha y Hora Actual: ${document.getElementById('date-time').innerText}
+            `;
+            
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = 'es-ES'; // Solo español
+            window.speechSynthesis.speak(currentUtterance);
+
+            // Iniciar el cambio de color nuevamente después de la lectura
+            startColorChange();
+        }
+
+        setInterval(updateCountdown, 1000);
+        setInterval(updateDateTime, 1000);
+        window.onload = () => {
+            updateCountdown();
+            updateDateTime();
+            startColorChange(); // Inicia el cambio de color al cargar la página
+            translateAndSpeak('es-ES'); // Lee el texto en español al iniciar
+        };
+    </script>
+</body>
+</html>
