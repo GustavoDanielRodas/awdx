@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Tono</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100vh; /* Altura completa de la ventana del navegador */
+            width: 100vw;  /* Ancho completo de la ventana del navegador */
+            overflow: hidden; /* Evitar barras de desplazamiento */
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-image: url('01.png'); /* Agregar la imagen de fondo */
+            background-size: cover; /* Ajustar la imagen para cubrir el fondo manteniendo las proporciones */
+            background-repeat: no-repeat; /* Evitar la repetición de la imagen */
+            background-position: center; /* Centrar la imagen */
+            color: rgb(255, 0, 0); /* Color inicial del texto */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        #frequencyDisplay {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        #progressContainer {
+            margin-top: 20px;
+            width: 80%; /* Ajustar al 80% del ancho del viewport */
+            max-width: 600px; /* Ancho máximo para la barra de progreso */
+            background-color: #f3f3f3;
+            border: 1px solid #ddd;
+            height: 30px;
+            position: relative;
+        }
+        #progressBar {
+            height: 100%;
+            background-color: #4caf50;
+            width: 0;
+            text-align: center;
+            color: white;
+            line-height: 30px; /* Mismo que la altura para centrar el texto */
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        button {
+            font-size: 16px;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generador de Tono para Test de Audición</h1>
+    <button onclick="startTone()">Iniciar Prueba</button>
+    <button onclick="stopTone()">Detener Prueba</button>
+    <div id="frequencyDisplay">Frecuencia: 0 Hz</div>
+    <div id="progressContainer">
+        <div id="progressBar">0%</div>
+    </div>
+    
+    <script>
+        let audioContext;
+        let oscillator;
+        let isPlaying = false;
+        let frequencyDisplay = document.getElementById('frequencyDisplay');
+        let progressBar = document.getElementById('progressBar');
+        let intervalId;
+        let progressIntervalId;
+
+        function startTone() {
+            if (isPlaying) return; // Evitar iniciar si ya está en reproducción
+            
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            oscillator = audioContext.createOscillator();
+            
+            oscillator.type = 'sine'; // Tipo de onda
+            oscillator.connect(audioContext.destination);
+
+            let startTime = audioContext.currentTime;
+            let duration = 60; // Duración total del tono en segundos
+            let frequencyRange = 50000; // Frecuencia máxima en Hz
+
+            // Crear una rampa de frecuencia de 0 a 50000 Hz durante 60 segundos
+            oscillator.frequency.setValueAtTime(0, startTime);
+            oscillator.frequency.linearRampToValueAtTime(frequencyRange, startTime + duration);
+
+            oscillator.start(startTime);
+            oscillator.stop(startTime + duration);
+
+            isPlaying = true;
+            
+            // Actualizar la frecuencia en pantalla y la barra de progreso
+            updateFrequencyDisplay(startTime, duration);
+            updateProgressBar(startTime, duration);
+        }
+
+        function stopTone() {
+            if (!isPlaying) return; // Evitar detener si no está en reproducción
+            
+            oscillator.stop(audioContext.currentTime);
+            audioContext.close();
+            isPlaying = false;
+            clearInterval(intervalId); // Detener el intervalo de actualización
+            clearInterval(progressIntervalId); // Detener la barra de progreso
+            frequencyDisplay.textContent = 'Frecuencia: 0 Hz'; // Resetear display
+            progressBar.style.width = '0%'; // Resetear la barra de progreso
+            progressBar.textContent = '0%'; // Resetear el texto de la barra de progreso
+        }
+
+        function updateFrequencyDisplay(startTime, duration) {
+            let endTime = startTime + duration;
+            intervalId = setInterval(() => {
+                if (!isPlaying) {
+                    clearInterval(intervalId);
+                    return;
+                }
+                
+                let currentTime = audioContext.currentTime;
+                if (currentTime > endTime) {
+                    clearInterval(intervalId);
+                    return;
+                }
+
+                let frequency = (50000 * (currentTime - startTime)) / duration;
+                frequencyDisplay.textContent = `Frecuencia: ${Math.round(frequency)} Hz`;
+            }, 100); // Actualizar cada 100 ms
+        }
+
+        function updateProgressBar(startTime, duration) {
+            let endTime = startTime + duration;
+            progressIntervalId = setInterval(() => {
+                if (!isPlaying) {
+                    clearInterval(progressIntervalId);
+                    return;
+                }
+                
+                let currentTime = audioContext.currentTime;
+                if (currentTime > endTime) {
+                    clearInterval(progressIntervalId);
+                    return;
+                }
+
+                let progress = ((currentTime - startTime) / duration) * 100;
+                progressBar.style.width = `${progress}%`;
+                progressBar.textContent = `${Math.round(progress)}%`;
+            }, 100); // Actualizar cada 100 ms
+        }
+    </script>
+</body>
+</html>
