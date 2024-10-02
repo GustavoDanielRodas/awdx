@@ -3,71 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grabar pantalla con sonido y guardar</title>
+    <title>Extraer y Guardar Frames de Video</title>
 </head>
 <body>
-    <h1>Grabar pantalla con sonido y guardar</h1>
-    <button id="startRecording">Iniciar Grabación</button>
-    <button id="stopRecording" disabled>Detener Grabación</button>
-    <button id="saveRecording" disabled>Guardar Grabación</button>
-    <video id="recordedVideo" controls></video>
+    <h1>Extraer y Guardar Frames de Video</h1>
+    <input type="file" id="videoUpload" accept="video/*">
+    <video id="video" width="600" controls></video>
+    <button id="extractFrames">Extraer y Guardar Frames</button>
+    <div id="framesContainer"></div>
 
     <script>
-        let mediaRecorder;
-        let recordedChunks = [];
+        const videoUpload = document.getElementById('videoUpload');
+        const video = document.getElementById('video');
+        const extractFrames = document.getElementById('extractFrames');
+        const framesContainer = document.getElementById('framesContainer');
 
-        const startRecording = async () => {
-            const stream = await navigator.mediaDevices.getDisplayMedia({
-                video: true,
-                audio: true   // Habilitar audio para capturar el sonido del sistema
+        let canvas, context;
+
+        videoUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            const url = URL.createObjectURL(file);
+            video.src = url;
+        });
+
+        extractFrames.addEventListener('click', () => {
+            if (!canvas) {
+                canvas = document.createElement('canvas');
+                context = canvas.getContext('2d');
+            }
+
+            video.currentTime = 0;
+            video.pause();
+
+            video.addEventListener('seeked', function captureFrame() {
+                if (video.currentTime >= video.duration) {
+                    video.removeEventListener('seeked', captureFrame);
+                    return;
+                }
+
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                const img = document.createElement('img');
+                img.src = canvas.toDataURL('image/png');
+                framesContainer.appendChild(img);
+
+                // Crear un enlace para descargar el frame
+                const link = document.createElement('a');
+                link.href = img.src;
+                link.download = `frame_${Math.floor(video.currentTime * 100)}.png`;
+                link.click();
+
+                video.currentTime += 0.030; // Cambiar este valor para ajustar el intervalo entre frames
             });
-            
-            mediaRecorder = new MediaRecorder(stream);
-            
-            mediaRecorder.ondataavailable = (event) => {
-                recordedChunks.push(event.data);
-            };
-            
-            mediaRecorder.onstop = () => {
-                const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
-                recordedChunks = [];
-                const videoURL = URL.createObjectURL(recordedBlob);
-                document.getElementById('recordedVideo').src = videoURL;
 
-                // Habilitar botón para guardar la grabación
-                document.getElementById('saveRecording').disabled = false;
-            };
-            
-            mediaRecorder.start();
-            
-            document.getElementById('startRecording').disabled = true;
-            document.getElementById('stopRecording').disabled = false;
-        };
-
-        const stopRecording = () => {
-            mediaRecorder.stop();
-            document.getElementById('startRecording').disabled = false;
-            document.getElementById('stopRecording').disabled = true;
-        };
-
-        const saveRecording = () => {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'grabacion.webm';
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }, 100);
-        };
-
-        document.getElementById('startRecording').addEventListener('click', startRecording);
-        document.getElementById('stopRecording').addEventListener('click', stopRecording);
-        document.getElementById('saveRecording').addEventListener('click', saveRecording);
+            video.currentTime = 0.010; // Inicialización para empezar la extracción
+        });
     </script>
 </body>
 </html>
